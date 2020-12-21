@@ -4,7 +4,7 @@ import VueRouter from 'vue-router';
 Vue.use(VueRouter);
 
 import MainPage from '../view/main/MainPage';
-import TabHome from '../view/main/tabs/TabHome';
+import TabHomeConfig from '../view/main/tabs/TabHomeConfig';
 import TabProducts from '../view/main/tabs/TabProducts';
 import TabDiscover from '../view/main/tabs/TabDiscover';
 import TabMine from '../view/main/tabs/TabMine';
@@ -24,7 +24,7 @@ const routes = [
   {
     name: 'main', redirect: '/main/home', component: MainPage,
     children: [
-      {name: 'home', path: 'home', component: TabHome, meta: {keepAlive: true}},
+      {name: 'home', path: 'home', component: TabHomeConfig, meta: {keepAlive: true}},
       {name: 'products', path: 'products', component: TabProducts, meta: {keepAlive: true}},
       {name: 'discover', path: 'discover', component: TabDiscover, meta: {keepAlive: true}},
       {name: 'mine', path: 'mine', component: TabMine, meta: {keepAlive: true}},

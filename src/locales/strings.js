@@ -5,7 +5,7 @@
  */
 const AppString = {
   'tab_home': ['首页', 'Home'],
-  'tab_products': ['产品', 'Products'],
+  'tab_products': ['产品列表', 'Products'],
   'tab_discovery': ['发现', 'Discovery'],
   'tab_mine': ['我的', 'Mine'],
   'settings': ['设置', 'Settings'],

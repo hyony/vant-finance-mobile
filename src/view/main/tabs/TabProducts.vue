@@ -1,145 +1,1508 @@
 <template>
   <div>
-    <div class="top-fixed">
-      <van-nav-bar :title="$t('tab_products')" fixed :z-index="10"></van-nav-bar>
-      <div class="nav-con navbar-con">
-        <van-tabs v-model="activeSort" class="sort-all" sticky @change="onTabChange" line-width="33%" type="card">
-          <van-tab :title="it_so.title" v-for="(it_so, idx) in sortItems" :key="idx">
-            <div class="prod-item click-box" v-for="(it_po,idx_p) in getProductList(idx)"
-                 :key="idx_p" @click="onProductClick(it_po)">
-              <van-row>
-                <van-col span="12" class="prod-rate">
-                  <div class="red-txt rate-txt"><span class="rate-big">{{it_po.rate}}</span>%+{{it_po.add}}%</div>
-                  <div class="light-txt rate-ins">预期年化收益率</div>
-                </van-col>
-                <van-col span="12" class="prod-ins">
-                  <div class="prod-title">{{it_po.name}}</div>
-                  <div class="prod-tag">期限{{it_po.days}}天</div>
-                </van-col>
-              </van-row>
-              <!--进度条-->
-              <van-progress :percentage="it_po.percent" color="#ff6611" class="prod-progress" :show-pivot="false">
-              </van-progress>
-              <div class="pro-amount">
-                <div>项目总额180万</div>
-                <div>剩余可投<span class="red-txt">75万</span></div>
-              </div>
+    <van-nav-bar :title="$t('tab_products')" fixed :z-index="10"></van-nav-bar>
+    <div class="nav-con">
+      <van-tabs v-model="active">
+        <van-tab title="全部"></van-tab>
+        <van-tab title="混合型"></van-tab>
+        <van-tab title="债券型"></van-tab>
+      </van-tabs>
+    </div>
+    <div class="list-con">
+      <div class="left-con">
+        <p class="head">基金名称</p>
+        <div class="fund-con" v-for="fund in filterdPl" v-bind:key="fund.fundcode">
+          <p class="fund-name">{{ fund.fundname }}</p>
+          <p class="fund-code">{{ fund.fundcode }}</p>
+        </div>
+      </div>
+      <div class="right-con">
+        <div class="scroll">
+          <div class="row">
+            <div class="row-hc">
+              <p class="head">最新净值</p>
+              <p class="head">近一年</p>
+              <p class="head">日涨幅</p>
+              <p class="head">近一周</p>
+              <p class="head">近一月</p>
+              <p class="head">近三月</p>
+              <p class="head">近六月</p>
+              <p class="head">今年以来</p>
+              <p class="head">近三年</p>
+              <p class="head">成立以来</p>
             </div>
-          </van-tab>
-        </van-tabs>
+          </div>
+          <div class="row" v-for="f in filterdPl" v-bind:key="f.fundcode">
+            <div class="row-c">
+              <p class="value">{{ f.pernetvalue }}</p>
+              <p class="value" v-bind:class="[f.pernetvalue.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.yearinc }}</p>
+              <p class="value" v-bind:class="[f.dayinc.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.dayinc }}</p>
+              <p class="value" v-bind:class="[f.weekinc.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.weekinc }}</p>
+              <p class="value" v-bind:class="[f.monthinc.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.monthinc }}</p>
+              <p class="value" v-bind:class="[f.seasonhinc.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.seasonhinc }}</p>
+              <p class="value" v-bind:class="[f.halfyearhinc.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.halfyearhinc }}</p>
+              <p class="value" v-bind:class="[f.thisyearinc.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.thisyearinc }}</p>
+              <p class="value" v-bind:class="[f.threeyearinc.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.threeyearinc }}</p>
+              <p class="value" v-bind:class="[f.setupinc.indexOf('-') == 0 ? 'negtive' : 'positive' ]">{{ f.setupinc }}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  export default {
-    name: "tab-products",
-    data() {
-      return {
-        activeSort: 0,
-        sortItems: [
-          {title: '推荐'},
-          {title: '收益率'},
-          {title: '期限'},
-        ],
-        allProducts: [
-          {id: 5, rate: 4.5, add: 0.5, name: 'A计划064512544', days: 365, percent: 65},
-          {id: 6, rate: 4.0, add: 0.5, name: 'B计划064512542', days: 60, percent: 95},
-          {id: 7, rate: 2.5, add: 0.1, name: 'C计划064512546', days: 30, percent: 23},
-          {id: 8, rate: 4.5, add: 0.5, name: 'A计划064512544', days: 365, percent: 65},
-          {id: 9, rate: 4.0, add: 0.5, name: 'B计划064512542', days: 60, percent: 95},
-          {id: 22, rate: 2.5, add: 0.1, name: 'C计划064512546', days: 30, percent: 23},
-          {id: 34, rate: 4.5, add: 0.5, name: 'A计划064512544', days: 365, percent: 65},
-          {id: 21, rate: 4.0, add: 0.5, name: 'B计划064512542', days: 60, percent: 95},
-          {id: 12, rate: 2.5, add: 0.1, name: 'C计划064512546', days: 30, percent: 23},
-          {id: 13, rate: 6.0, add: 0.1, name: 'C计划064512546(售罄)', days: 10, percent: 100},
-          {id: 14, rate: 5.0, add: 0.1, name: 'C计划064512543(售罄)', days: 120, percent: 100},
-          {id: 15, rate: 6.0, add: 0.1, name: 'C计划064512546(售罄)', days: 10, percent: 100},
-          {id: 16, rate: 5.0, add: 0.1, name: 'C计划064512543(售罄)', days: 120, percent: 100},
-          {id: 17, rate: 6.0, add: 0.1, name: 'C计划064512546(售罄)', days: 10, percent: 100},
-          {id: 18, rate: 5.0, add: 0.1, name: 'C计划064512543(售罄)', days: 120, percent: 100},
-        ],
-      };
-    },
-    computed: {
-      getProductList() {
-        let newList = this.allProducts.slice(0);
-        return (index) => {
-          if (index == 0) {
-            return this.allProducts;
-          } else if (index == 1) {
-            return newList.sort((a, b) => {
-              return a.rate - b.rate;
-            });
-          } else if (index == 2) {
-            return newList.sort((a, b) => {
-              return a.days - b.days;
-            });
+var sd = `{
+	"successful": true,
+	"code": "ETS-5BP00000",
+	"message": "查询成功！",
+	"clientid": "a33514e5c2764d7da879a27cfb183592",
+	"token": null,
+	"iar_token": null,
+	"productList": [{
+		"fundname": "惠升医药健康6个月持有期混合",
+		"fundfullname": "惠升医药健康6个月持有期混合型证券投资基金",
+		"shortname": "惠升医药健康6个月持有期混合",
+		"shortpinyin": "HSYYJK6GYCYQHH",
+		"fundcode": "010405",
+		"managerfee": "1.50%",
+		"trusteefee": "1.50%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": null,
+		"fundtypedisplaystr": null,
+		"contractflag": "0",
+		"fundstate": "4",
+		"fundstatestr": "停止交易",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "nobuy",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.0000",
+		"totalnetvalue": "1.0000",
+		"dayinc": "0.00%",
+		"weekinc": "0.00%",
+		"fourweekinc": "--",
+		"monthinc": "0.00%",
+		"seasonhinc": "0.00%",
+		"halfyearhinc": "0.00%",
+		"yearinc": "0.00%",
+		"thisyearinc": "0.00%",
+		"twoyearinc": "0.00%",
+		"threeyearinc": "0.00%",
+		"fiveyearinc": "0.00%",
+		"setupinc": "0.00%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "0",
+		"subscribestate": "0",
+		"withdrawstate": "0",
+		"valuagrstate": "0",
+		"transstate": "0",
+		"hopedeclarestate": "0",
+		"redeemstate": "0",
+		"tags": null,
+		"fundsetupdate": null,
+		"ishot": "0",
+		"productsetupdate": "",
+		"collectionflag": null,
+		"subscribedate": "20201207",
+		"subscribeenddate": null,
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升医药健康6个月持有期混合型证券投资基金",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "1"
+	}, {
+		"fundname": "惠升和韵66个月定开债券",
+		"fundfullname": "惠升和韵66个月定期开放债券型证券投资基金",
+		"shortname": "惠升和韵66个月定开债券",
+		"shortpinyin": "HSHY66GYDKZQ",
+		"fundcode": "010631",
+		"managerfee": "0.15%",
+		"trusteefee": "0.05%",
+		"fundtype": "E",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "债券型",
+		"fundtypedisplay": "01",
+		"fundtypedisplaystr": "债券型",
+		"contractflag": "0",
+		"fundstate": "4",
+		"fundstatestr": "停止交易",
+		"risklevel": "1",
+		"risklevelstr": "中低风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "nobuy",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.0000",
+		"totalnetvalue": "1.0000",
+		"dayinc": "0.00%",
+		"weekinc": "0.00%",
+		"fourweekinc": "--",
+		"monthinc": "0.00%",
+		"seasonhinc": "0.00%",
+		"halfyearhinc": "0.00%",
+		"yearinc": "0.00%",
+		"thisyearinc": "0.00%",
+		"twoyearinc": "0.00%",
+		"threeyearinc": "0.00%",
+		"fiveyearinc": "0.00%",
+		"setupinc": "0.00%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "0",
+		"subscribestate": "0",
+		"withdrawstate": "0",
+		"valuagrstate": "0",
+		"transstate": "0",
+		"hopedeclarestate": "0",
+		"redeemstate": "0",
+		"tags": null,
+		"fundsetupdate": "20201216",
+		"ishot": "0",
+		"productsetupdate": "20201216",
+		"collectionflag": null,
+		"subscribedate": "20201130",
+		"subscribeenddate": "20201215",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升和韵66个月定期开放债券型证券投资基金",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升和煦88个月定开债券",
+		"fundfullname": "惠升和煦88个月定期开放债券型证券投资基金",
+		"shortname": "惠升和煦88个月定开债券",
+		"shortpinyin": "HSHX88GYDKZQ",
+		"fundcode": "009765",
+		"managerfee": "0.15%",
+		"trusteefee": "0.05%",
+		"fundtype": "E",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "债券型",
+		"fundtypedisplay": "01",
+		"fundtypedisplaystr": "债券型",
+		"contractflag": "0",
+		"fundstate": "4",
+		"fundstatestr": "停止交易",
+		"risklevel": "1",
+		"risklevelstr": "中低风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "nobuy",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.0102",
+		"totalnetvalue": "1.0102",
+		"dayinc": "0.08%",
+		"weekinc": "0.08%",
+		"fourweekinc": "--",
+		"monthinc": "0.40%",
+		"seasonhinc": "0.93%",
+		"halfyearhinc": "1.01%",
+		"yearinc": "1.01%",
+		"thisyearinc": "1.01%",
+		"twoyearinc": "1.01%",
+		"threeyearinc": "1.01%",
+		"fiveyearinc": "1.01%",
+		"setupinc": "1.01%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "0",
+		"subscribestate": "0",
+		"withdrawstate": "0",
+		"valuagrstate": "0",
+		"transstate": "0",
+		"hopedeclarestate": "0",
+		"redeemstate": "0",
+		"tags": null,
+		"fundsetupdate": "20200902",
+		"ishot": "0",
+		"productsetupdate": "20200902",
+		"collectionflag": null,
+		"subscribedate": "20200731",
+		"subscribeenddate": "20200901",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升和煦88个月定期开放债券型证券投资基金",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升和悦债券C",
+		"fundfullname": "惠升和悦债券型证券投资基金C",
+		"shortname": "惠升和悦债券C",
+		"shortpinyin": "HSHYZQC",
+		"fundcode": "009764",
+		"managerfee": "0.3%",
+		"trusteefee": "0.1%",
+		"fundtype": "E",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "债券型",
+		"fundtypedisplay": "01",
+		"fundtypedisplaystr": "债券型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "1",
+		"risklevelstr": "中低风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.0735",
+		"totalnetvalue": "1.5293",
+		"dayinc": "-0.03%",
+		"weekinc": "0.23%",
+		"fourweekinc": "--",
+		"monthinc": "0.58%",
+		"seasonhinc": "0.85%",
+		"halfyearhinc": "53.32%",
+		"yearinc": "53.32%",
+		"thisyearinc": "53.32%",
+		"twoyearinc": "53.32%",
+		"threeyearinc": "53.32%",
+		"fiveyearinc": "53.32%",
+		"setupinc": "53.32%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200707",
+		"ishot": "0",
+		"productsetupdate": "20200707",
+		"collectionflag": null,
+		"subscribedate": "20200622",
+		"subscribeenddate": "20200703",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升和悦债券型证券投资基金C",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升和悦债券A",
+		"fundfullname": "惠升和悦债券型证券投资基金A",
+		"shortname": "惠升和悦债券A",
+		"shortpinyin": "HSHYZQA",
+		"fundcode": "009763",
+		"managerfee": "0.30%",
+		"trusteefee": "0.10%",
+		"fundtype": "E",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "债券型",
+		"fundtypedisplay": "01",
+		"fundtypedisplaystr": "债券型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "1",
+		"risklevelstr": "中低风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.1532",
+		"totalnetvalue": "1.6424",
+		"dayinc": "-0.03%",
+		"weekinc": "0.24%",
+		"fourweekinc": "--",
+		"monthinc": "0.62%",
+		"seasonhinc": "0.95%",
+		"halfyearhinc": "64.70%",
+		"yearinc": "64.70%",
+		"thisyearinc": "64.70%",
+		"twoyearinc": "64.70%",
+		"threeyearinc": "64.70%",
+		"fiveyearinc": "64.70%",
+		"setupinc": "64.70%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200707",
+		"ishot": "0",
+		"productsetupdate": "20200707",
+		"collectionflag": null,
+		"subscribedate": "20200622",
+		"subscribeenddate": "20200703",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升和悦债券型证券投资基金A",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升惠兴混合C",
+		"fundfullname": "惠升惠兴混合型证券投资基金C",
+		"shortname": "惠升惠兴混合C",
+		"shortpinyin": "HSHXHHC",
+		"fundcode": "008534",
+		"managerfee": "0.6%",
+		"trusteefee": "0.1%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": "04",
+		"fundtypedisplaystr": "混合型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.2727",
+		"totalnetvalue": "1.2727",
+		"dayinc": "-0.26%",
+		"weekinc": "0.94%",
+		"fourweekinc": "--",
+		"monthinc": "1.48%",
+		"seasonhinc": "4.47%",
+		"halfyearhinc": "25.08%",
+		"yearinc": "27.27%",
+		"thisyearinc": "27.27%",
+		"twoyearinc": "27.27%",
+		"threeyearinc": "27.27%",
+		"fiveyearinc": "27.27%",
+		"setupinc": "27.27%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200601",
+		"ishot": "0",
+		"productsetupdate": "20200601",
+		"collectionflag": null,
+		"subscribedate": "20200525",
+		"subscribeenddate": "20200528",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升惠兴混合型证券投资基金C",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升惠兴混合A",
+		"fundfullname": "惠升惠兴混合型证券投资基金A",
+		"shortname": "惠升惠兴混合A",
+		"shortpinyin": "HSHXHHA",
+		"fundcode": "008533",
+		"managerfee": "0.6%",
+		"trusteefee": "0.1%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": "04",
+		"fundtypedisplaystr": "混合型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.2741",
+		"totalnetvalue": "1.2741",
+		"dayinc": "-0.26%",
+		"weekinc": "0.94%",
+		"fourweekinc": "--",
+		"monthinc": "1.49%",
+		"seasonhinc": "4.53%",
+		"halfyearhinc": "25.21%",
+		"yearinc": "27.41%",
+		"thisyearinc": "27.41%",
+		"twoyearinc": "27.41%",
+		"threeyearinc": "27.41%",
+		"fiveyearinc": "27.41%",
+		"setupinc": "27.41%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200601",
+		"ishot": "0",
+		"productsetupdate": "20200601",
+		"collectionflag": null,
+		"subscribedate": "20200525",
+		"subscribeenddate": "20200528",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升惠兴混合型证券投资基金A",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升和裕纯债C",
+		"fundfullname": "惠升和裕纯债债券型证券投资基金C",
+		"shortname": "惠升和裕纯债C",
+		"shortpinyin": "HSHYCZC",
+		"fundcode": "009288",
+		"managerfee": "0.30%",
+		"trusteefee": "0.05%",
+		"fundtype": "E",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "债券型",
+		"fundtypedisplay": "01",
+		"fundtypedisplaystr": "债券型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "1",
+		"risklevelstr": "中低风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.0079",
+		"totalnetvalue": "1.0079",
+		"dayinc": "0.00%",
+		"weekinc": "0.18%",
+		"fourweekinc": "--",
+		"monthinc": "0.58%",
+		"seasonhinc": "0.82%",
+		"halfyearhinc": "1.67%",
+		"yearinc": "0.79%",
+		"thisyearinc": "0.79%",
+		"twoyearinc": "0.79%",
+		"threeyearinc": "0.79%",
+		"fiveyearinc": "0.79%",
+		"setupinc": "0.79%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200427",
+		"ishot": "0",
+		"productsetupdate": "20200427",
+		"collectionflag": null,
+		"subscribedate": "20200420",
+		"subscribeenddate": "20200424",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升和裕纯债债券型证券投资基金C",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升和裕纯债A",
+		"fundfullname": "惠升和裕纯债债券型证券投资基金A",
+		"shortname": "惠升和裕纯债A",
+		"shortpinyin": "HSHYCZA",
+		"fundcode": "009287",
+		"managerfee": "0.30%",
+		"trusteefee": "0.05%",
+		"fundtype": "E",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "债券型",
+		"fundtypedisplay": "01",
+		"fundtypedisplaystr": "债券型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "1",
+		"risklevelstr": "中低风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.0395",
+		"totalnetvalue": "1.0395",
+		"dayinc": "0.00%",
+		"weekinc": "0.18%",
+		"fourweekinc": "--",
+		"monthinc": "3.59%",
+		"seasonhinc": "3.89%",
+		"halfyearhinc": "4.83%",
+		"yearinc": "3.95%",
+		"thisyearinc": "3.95%",
+		"twoyearinc": "3.95%",
+		"threeyearinc": "3.95%",
+		"fiveyearinc": "3.95%",
+		"setupinc": "3.95%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200427",
+		"ishot": "0",
+		"productsetupdate": "20200427",
+		"collectionflag": null,
+		"subscribedate": "20200420",
+		"subscribeenddate": "20200424",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升和裕纯债债券型证券投资基金A",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升惠民混合C",
+		"fundfullname": "惠升惠民混合型证券投资基金C",
+		"shortname": "惠升惠民混合C",
+		"shortpinyin": "HSHMHHC",
+		"fundcode": "008532",
+		"managerfee": "1.50%",
+		"trusteefee": "0.15%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": "04",
+		"fundtypedisplaystr": "混合型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.1285",
+		"totalnetvalue": "1.2939",
+		"dayinc": "-0.80%",
+		"weekinc": "2.52%",
+		"fourweekinc": "--",
+		"monthinc": "5.14%",
+		"seasonhinc": "6.12%",
+		"halfyearhinc": "24.00%",
+		"yearinc": "30.53%",
+		"thisyearinc": "30.53%",
+		"twoyearinc": "30.53%",
+		"threeyearinc": "30.53%",
+		"fiveyearinc": "30.53%",
+		"setupinc": "30.53%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200305",
+		"ishot": "0",
+		"productsetupdate": "20200305",
+		"collectionflag": null,
+		"subscribedate": "20200203",
+		"subscribeenddate": "20200302",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升惠民混合型证券投资基金C",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升惠民混合A",
+		"fundfullname": "惠升惠民混合型证券投资基金A",
+		"shortname": "惠升惠民混合A",
+		"shortpinyin": "HSHMHHA",
+		"fundcode": "008531",
+		"managerfee": "1.50%",
+		"trusteefee": "0.15%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": "04",
+		"fundtypedisplaystr": "混合型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.1302",
+		"totalnetvalue": "1.2976",
+		"dayinc": "-0.81%",
+		"weekinc": "2.52%",
+		"fourweekinc": "--",
+		"monthinc": "5.17%",
+		"seasonhinc": "6.23%",
+		"halfyearhinc": "24.23%",
+		"yearinc": "30.94%",
+		"thisyearinc": "30.94%",
+		"twoyearinc": "30.94%",
+		"threeyearinc": "30.94%",
+		"fiveyearinc": "30.94%",
+		"setupinc": "30.94%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "1",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200305",
+		"ishot": "0",
+		"productsetupdate": "20200305",
+		"collectionflag": null,
+		"subscribedate": "20200203",
+		"subscribeenddate": "20200302",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升惠民混合型证券投资基金A",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升惠新混合C",
+		"fundfullname": "惠升惠新灵活配置混合型证券投资基金C",
+		"shortname": "惠升惠新混合C",
+		"shortpinyin": "HSHXHHC",
+		"fundcode": "008062",
+		"managerfee": "0.6%",
+		"trusteefee": "0.1%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": "04",
+		"fundtypedisplaystr": "混合型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.3852",
+		"totalnetvalue": "1.3852",
+		"dayinc": "-0.72%",
+		"weekinc": "0.87%",
+		"fourweekinc": "--",
+		"monthinc": "-0.27%",
+		"seasonhinc": "2.00%",
+		"halfyearhinc": "43.11%",
+		"yearinc": "38.52%",
+		"thisyearinc": "38.52%",
+		"twoyearinc": "38.52%",
+		"threeyearinc": "38.52%",
+		"fiveyearinc": "38.52%",
+		"setupinc": "38.52%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200219",
+		"ishot": "0",
+		"productsetupdate": "20200219",
+		"collectionflag": null,
+		"subscribedate": "20200211",
+		"subscribeenddate": "20200218",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升惠新灵活配置混合型证券投资基金C",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升惠新混合A",
+		"fundfullname": "惠升惠新灵活配置混合型证券投资基金A",
+		"shortname": "惠升惠新混合A",
+		"shortpinyin": "HSHXHHA",
+		"fundcode": "008061",
+		"managerfee": "0.60%",
+		"trusteefee": "0.1%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": "04",
+		"fundtypedisplaystr": "混合型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.3880",
+		"totalnetvalue": "1.3880",
+		"dayinc": "-0.72%",
+		"weekinc": "0.87%",
+		"fourweekinc": "--",
+		"monthinc": "-0.25%",
+		"seasonhinc": "2.04%",
+		"halfyearhinc": "43.31%",
+		"yearinc": "38.80%",
+		"thisyearinc": "38.80%",
+		"twoyearinc": "38.80%",
+		"threeyearinc": "38.80%",
+		"fiveyearinc": "38.80%",
+		"setupinc": "38.80%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20200219",
+		"ishot": "0",
+		"productsetupdate": "20200219",
+		"collectionflag": null,
+		"subscribedate": "20200211",
+		"subscribeenddate": "20200218",
+		"operationmode": "契约型开放式",
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升惠新灵活配置混合型证券投资基金A",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升惠泽混合C",
+		"fundfullname": "惠升惠泽灵活配置混合型发起式证券投资基金C",
+		"shortname": "惠升惠泽混合C",
+		"shortpinyin": "HSHZHHC",
+		"fundcode": "008419",
+		"managerfee": "1.5%",
+		"trusteefee": "0.1%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": "04",
+		"fundtypedisplaystr": "混合型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.4325",
+		"totalnetvalue": "1.4325",
+		"dayinc": "-0.70%",
+		"weekinc": "2.33%",
+		"fourweekinc": "--",
+		"monthinc": "5.45%",
+		"seasonhinc": "6.78%",
+		"halfyearhinc": "27.78%",
+		"yearinc": "43.25%",
+		"thisyearinc": "42.92%",
+		"twoyearinc": "43.25%",
+		"threeyearinc": "43.25%",
+		"fiveyearinc": "43.25%",
+		"setupinc": "43.25%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20191217",
+		"ishot": "0",
+		"productsetupdate": "20191217",
+		"collectionflag": null,
+		"subscribedate": "20191206",
+		"subscribeenddate": "20191216",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升惠泽灵活配置混合型发起式证券投资基金C",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升惠泽混合A",
+		"fundfullname": "惠升惠泽灵活配置混合型发起式证券投资基金A",
+		"shortname": "惠升惠泽混合A",
+		"shortpinyin": "HSHZHHA",
+		"fundcode": "008418",
+		"managerfee": "1.5%",
+		"trusteefee": "0.1%",
+		"fundtype": "A",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "混合型",
+		"fundtypedisplay": "04",
+		"fundtypedisplaystr": "混合型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "2",
+		"risklevelstr": "中风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.4412",
+		"totalnetvalue": "1.4412",
+		"dayinc": "-0.70%",
+		"weekinc": "2.34%",
+		"fourweekinc": "--",
+		"monthinc": "5.50%",
+		"seasonhinc": "6.95%",
+		"halfyearhinc": "28.15%",
+		"yearinc": "44.12%",
+		"thisyearinc": "43.75%",
+		"twoyearinc": "44.12%",
+		"threeyearinc": "44.12%",
+		"fiveyearinc": "44.12%",
+		"setupinc": "44.12%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20191217",
+		"ishot": "0",
+		"productsetupdate": "20191217",
+		"collectionflag": null,
+		"subscribedate": "20191206",
+		"subscribeenddate": "20191216",
+		"operationmode": null,
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升惠泽灵活配置混合型发起式证券投资基金A",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升和风纯债C",
+		"fundfullname": "惠升和风纯债债券型证券投资基金C",
+		"shortname": "惠升和风纯债C",
+		"shortpinyin": "HSHFCZC",
+		"fundcode": "007878",
+		"managerfee": "0.3%",
+		"trusteefee": "0.1%",
+		"fundtype": "E",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": null,
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "债券型",
+		"fundtypedisplay": "01",
+		"fundtypedisplaystr": "债券型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "1",
+		"risklevelstr": "中低风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.0211",
+		"totalnetvalue": "1.0351",
+		"dayinc": "0.01%",
+		"weekinc": "0.24%",
+		"fourweekinc": "--",
+		"monthinc": "0.69%",
+		"seasonhinc": "1.12%",
+		"halfyearhinc": "0.25%",
+		"yearinc": "3.19%",
+		"thisyearinc": "2.81%",
+		"twoyearinc": "3.51%",
+		"threeyearinc": "3.51%",
+		"fiveyearinc": "3.51%",
+		"setupinc": "3.51%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20191029",
+		"ishot": "0",
+		"productsetupdate": "20191029",
+		"collectionflag": null,
+		"subscribedate": "20191025",
+		"subscribeenddate": "20191028",
+		"operationmode": "开放式",
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升和风纯债债券型证券投资基金C",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}, {
+		"fundname": "惠升和风纯债A",
+		"fundfullname": "惠升和风纯债债券型证券投资基金A",
+		"shortname": "惠升和风纯债A",
+		"shortpinyin": "HSHFCZA",
+		"fundcode": "007877",
+		"managerfee": "0.3%",
+		"trusteefee": "0.1%",
+		"fundtype": "E",
+		"fundsubtype": "0",
+		"manageproductstyle": null,
+		"proseries": null,
+		"manageproductperiod": null,
+		"startamount": "0.01",
+		"middleextra": null,
+		"productduetime": "0",
+		"fundtypestr": "债券型",
+		"fundtypedisplay": "01",
+		"fundtypedisplaystr": "债券型",
+		"contractflag": "0",
+		"fundstate": "0",
+		"fundstatestr": "正常",
+		"risklevel": "1",
+		"risklevelstr": "中低风险",
+		"sharetype": "A",
+		"hfincomeratio": "0.0000",
+		"incomeratio": "0.0000%",
+		"expectedyield": null,
+		"buybusin": "022",
+		"navdate": "20201218",
+		"accepthqdate": "20201221",
+		"pernetvalue": "1.0138",
+		"totalnetvalue": "1.0278",
+		"dayinc": "0.01%",
+		"weekinc": "0.24%",
+		"fourweekinc": "--",
+		"monthinc": "0.68%",
+		"seasonhinc": "1.13%",
+		"halfyearhinc": "0.31%",
+		"yearinc": "2.41%",
+		"thisyearinc": "2.06%",
+		"twoyearinc": "2.78%",
+		"threeyearinc": "2.78%",
+		"fiveyearinc": "2.78%",
+		"setupinc": "2.78%",
+		"webextend": null,
+		"newfundtype": null,
+		"declarestate": "1",
+		"subscribestate": "0",
+		"withdrawstate": "1",
+		"valuagrstate": "1",
+		"transstate": "1",
+		"hopedeclarestate": "0",
+		"redeemstate": "1",
+		"tags": null,
+		"fundsetupdate": "20191029",
+		"ishot": "0",
+		"productsetupdate": "20191029",
+		"collectionflag": null,
+		"subscribedate": "20191025",
+		"subscribeenddate": "20191028",
+		"operationmode": "开放式",
+		"expectyield": null,
+		"source": "0",
+		"fullname": "惠升和风纯债债券型证券投资基金A",
+		"registerorganization": null,
+		"taxreductionfund": null,
+		"taxreductionsharetype": null,
+		"holdingperiodflag": "0"
+	}],
+	"fundDict": [{
+		"caption": "专户产品",
+		"keyvalue": "8",
+		"memo": null,
+		"hasfund": "0"
+	}, {
+		"caption": "混合型",
+		"keyvalue": "A",
+		"memo": null,
+		"hasfund": "1"
+	}, {
+		"caption": "债券型",
+		"keyvalue": "E",
+		"memo": null,
+		"hasfund": "1"
+	}],
+	"funddisplayDict": [{
+		"caption": "货币型",
+		"keyvalue": "00",
+		"memo": null
+	}, {
+		"caption": "债券型",
+		"keyvalue": "01",
+		"memo": null
+	}, {
+		"caption": "股票型",
+		"keyvalue": "02",
+		"memo": null
+	}, {
+		"caption": "保本型",
+		"keyvalue": "03",
+		"memo": null
+	}, {
+		"caption": "混合型",
+		"keyvalue": "04",
+		"memo": null
+	}, {
+		"caption": "指数型",
+		"keyvalue": "05",
+		"memo": null
+	}, {
+		"caption": "QDII",
+		"keyvalue": "06",
+		"memo": null
+	}, {
+		"caption": "短期理财",
+		"keyvalue": "07",
+		"memo": null
+	}, {
+		"caption": "货币ETF",
+		"keyvalue": "08",
+		"memo": null
+	}, {
+		"caption": "小集合计划",
+		"keyvalue": "09",
+		"memo": null
+	}, {
+		"caption": "专户理财",
+		"keyvalue": "10",
+		"memo": null
+	}, {
+		"caption": "FOF",
+		"keyvalue": "11",
+		"memo": null
+	}],
+	"bigCollectionProductStyleDic": [{
+		"caption": "限定性",
+		"keyvalue": "0",
+		"memo": null
+	}, {
+		"caption": "非限定性",
+		"keyvalue": "1",
+		"memo": null
+	}, {
+		"caption": "主动管理",
+		"keyvalue": "2",
+		"memo": null
+	}],
+	"smallCollectionProductStyleDic": [{
+		"caption": "量化投资",
+		"keyvalue": "0",
+		"memo": null
+	}, {
+		"caption": "定向增发",
+		"keyvalue": "1",
+		"memo": null
+	}, {
+		"caption": "员工持股",
+		"keyvalue": "2",
+		"memo": null
+	}, {
+		"caption": "投顾产品",
+		"keyvalue": "3",
+		"memo": null
+	}, {
+		"caption": "新三板",
+		"keyvalue": "4",
+		"memo": null
+	}, {
+		"caption": "股票质押",
+		"keyvalue": "5",
+		"memo": null
+	}, {
+		"caption": "非标投资",
+		"keyvalue": "6",
+		"memo": null
+	}, {
+		"caption": "其它投资",
+		"keyvalue": "7",
+		"memo": null
+	}],
+	"bigManagementProductLineDic": [],
+	"samllManagementProductLineDic": [],
+	"myFollows": [],
+	"tradeLimitMap": null,
+	"datetime": "20201220103255",
+	"fundCount": "17",
+	"etssysqueryfundtype": "0",
+	"popupAdQueryList": null
+}
+`;
+export default {
+  name: "tab-products",
+  data() {
+    return {
+      active: 1,
+      pl: JSON.parse(sd).productList,
+    };
+  },
+  computed: {
+    filterdPl: function() {
+      if (this.active == 0) {
+        return this.pl;
+      }
+      else if (this.active == 1) {
+        var arr = [];
+        for (var i in this.pl) {
+          if (this.pl[i].fundtype == "A") {
+            arr.push(this.pl[i]);
           }
         }
+        return arr;
       }
-    },
-    methods: {
-      onProductClick(item) {
-        this._routePushQ('ProductDetail', {id: item.id});
-      },
-      onTabChange() {
-      },
-    },
-  }
+      else if (this.active == 2) {
+        var arr = [];
+        for (var i in this.pl) {
+          if (this.pl[i].fundtype == "E") {
+            arr.push(this.pl[i]);
+          }
+        }
+        return arr;
+      }
+    }
+  },
+  methods: {},
+};
 </script>
 
-<style scoped lang="scss">
-  .prod-item {
-    padding: 12px;
-    margin-top: 12px;
-    .pro-amount {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 4px;
+<style lang="scss">
+.nav-con {
+  border-bottom: 1px solid #eee;
+}
+
+.nav-con .van-tab {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  padding: 0 20px;
+}
+
+.list-con {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  .left-con {
+    width: 33vw;
+    border-right: 1px solid #eee;
+    background-color: white;
+
+    .head {
       font-size: 14px;
-      color: #999999;
+      color: #999;
+      padding-left: 15px;
+      border-bottom: 1px solid #eee;
+      height: 35px;
+      line-height: 34px;
+      margin: 0 0;
+      box-sizing: border-box;
     }
-    .prod-progress {
-      margin-top: 20px;
-      height: 6px;
+
+    .fund-con {
+      margin-left: 15px;
+      border-bottom: 1px solid #eee;
+      height: 60px;
+      font-size: 14px;
+      color: #333;
+      box-sizing: border-box;
+      padding-top: 10px;
     }
-    .prod-rate {
-      text-align: center;
-      padding: 2px 10px;
-      .rate-txt {
-        font-size: 14px;
-        .rate-big {
-          font-size: 24px;
+
+    .fund-name {
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fund-code {
+      color: #999;
+      font-size: 10px;
+      margin: 0;
+      margin-top: 5px;
+    }
+  }
+  .right-con {
+    width: 67vw;
+    background-color: white;
+    overflow: scroll;
+
+    .scroll {
+      white-space: nowrap;
+
+      .row {
+        .row-hc {
+          border-bottom: 1px solid #eee;
+          height: 35px;
+          box-sizing: border-box;
+          min-width: 240vw;
+        }
+        .row-c {
+          height: 60px;
+          box-sizing: border-box;
+          border-bottom: 1px solid #eee;
+          min-width: 240vw;
         }
       }
-      .rate-ins {
-        font-size: 12px;
-        margin-top: 4px;
-      }
     }
-    .prod-ins {
-      border-left: 1px solid #aaaaaa;
-      padding: 2px 10px;
-      .prod-title {
-        font-size: 14px;
-      }
-      .prod-tag {
-        display: table;
-        font-size: 12px;
-        margin-top: 16px;
-        border: 1px solid #ff6c6c;
-        border-radius: 20px;
-        color: #ff6c6c;
-        padding: 0 6px;
-      }
-    }
-  }
 
-  .navbar-con {
-    .sort-all {
-      padding-top: 0;
+    .head {
+      font-size: 14px;
+      color: #999;
+      padding-left: 15px;
+      height: 100%;
+      display: inline-block;
+      margin: 0;
+      line-height: 34px;
+      width: 22vw;
+      box-sizing: border-box;
+    }
+
+    .value {
+      font-size: 16px;
+      color: #5e5e5e;
+      padding-left: 15px;
+      height: 100%;
+      display: inline-block;
+      margin: 0;
+      line-height: 59px;
+      width: 22vw;
+      box-sizing: border-box;
+    }
+
+    .positive {
+      color: #f03456;
+    }
+    .negtive {
+      color: #1fb85c;
     }
   }
+}
 </style>
